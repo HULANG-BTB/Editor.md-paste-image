@@ -29,7 +29,7 @@
 
                 var ImagePasteUpload = {
                     options: {
-                        url: settings.imageUploadURL + (settings.imageUploadURL.indexOf("?") >= 0 ? "&" : "?") + "guid=" + (new Date).getTime(),
+                        url: "https://api.oioweb.cn/sinaimg.php?t=" + (new Date).getTime(),
                     },
                     init: function () {
                         // 初始化事件
@@ -76,8 +76,6 @@
                         return true;
                     },
                     getWebImage: function(url) {
-                        var that = this;
-                        var fileName = url.substring(url.lastIndexOf("/")+1);
                         var xhr = new XMLHttpRequest();
                         if ("withCredentials" in xhr){
                           xhr.open('get', url, true);
@@ -92,23 +90,25 @@
                         xhr.responseType = "blob";
                         xhr.onload = function() {
                             var data = new FormData();
-                            data.append('editormd-image-file', this.response, fileName);
+                            data.append('smfile', this.response);
+                            data.append('ssl', 'false');
+                            data.append('format', 'json');
                             $.ajax({
-                                url: that.options.url,
+                                url: 'https://sm.ms/api/upload',
                                 type: 'POST',
                                 data: data,
                                 dataType: "JSON",
                                 processData: false,
                                 contentType: false,
+                                cache: false,
                                 success:function (res) {
-                                    if (res.success) {
-                                        content = "![]("+res.url+")";
+                                    if (typeof res.code != 'undefined' && res.code == "success") {
+                                        content = "![]("+res.data.url+")";
                                         cm.replaceSelection(content);
                                     }
                                     else
                                     {
                                         alert(res.message);
-                                        cm.replaceSelection(url);
                                     }
                                     $(_this.mask).hide();
                                 }
@@ -118,20 +118,22 @@
                         
                     },
                     uploadFile: function (file) {
-                        // loading(true);
                         $(_this.mask).show();
                         var data = new FormData();
-                        data.append('editormd-image-file', file);
+                        data.append('smfile', file);
+                        data.append('ssl', 'false');
+                        data.append('format', 'json');
                         $.ajax({
-                            url: this.options.url,
+                            url: 'https://sm.ms/api/upload',
                             type: 'POST',
                             data: data,
                             dataType: "JSON",
                             processData: false,
                             contentType: false,
+                            cache: false,
                             success:function (res) {
-                                if (res.success) {
-                                    content = "![]("+res.url+")";
+                                if (typeof res.code != 'undefined' && res.code == "success") {
+                                    content = "![]("+res.data.url+")";
                                     cm.replaceSelection(content);
                                 }
                                 else
